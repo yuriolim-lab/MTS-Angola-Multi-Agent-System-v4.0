@@ -1,8 +1,9 @@
 # Dependencies
 node_modules
 
-# Build outputs
+# Build outputs (keep standalone for production)
 .next
+!/.next/standalone
 out
 build
 
@@ -10,10 +11,11 @@ build
 .git
 .gitignore
 *.md
+!README.md
 .env*
 !.env.example
 
-# Database
+# Database (will be created in production)
 db/
 *.db
 *.db-journal
@@ -51,3 +53,6 @@ skills/
 
 # Download
 download/
+
+# Worklog
+worklog.md
