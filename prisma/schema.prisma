@@ -1,0 +1,166 @@
+// MTS Angola Multi-Agent System - Prisma Schema v4.0
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Tabela de Navios
+model Vessel {
+  id          String   @id @default(cuid())
+  name        String
+  imo         String   @unique
+  type        String?  // Tipo de carga (Container, Bulk, Tanker, etc)
+  owner       String?  // Armador (MSC, Maersk, CMA CGM, etc)
+  agent       String?  // Agente local
+  flag        String?  // Bandeira
+  grossTonnage Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  schedules   VesselSchedule[]
+}
+
+// Tabela de Escalas de Navios (Agente Pedro)
+model VesselSchedule {
+  id          String   @id @default(cuid())
+  vesselId    String
+  vessel      Vessel   @relation(fields: [vesselId], references: [id], onDelete: Cascade)
+  port        String   // Luanda, Lobito, Namibe, Cabinda, Soyo
+  eta         DateTime // Data prevista de chegada
+  etd         DateTime? // Data prevista de saída
+  status      String   @default("scheduled") // scheduled, arrived, departed, cancelled
+  cargoType   String?  // Tipo de carga
+  notes       String?
+  source      String?  // vesselfinder, marinetraffic, manual
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Tabela de Clientes
+model Client {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  phone         String?
+  company       String?
+  language      String   @default("PT") // PT, EN, ES
+  status        String   @default("cold") // cold, warm, hot, qualified, inactive
+  source        String?  // Fonte do lead
+  lastContactAt DateTime?
+  nextFollowUp  DateTime?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  interactions  CRMInteraction[]
+  meetings      Meeting[]
+}
+
+// Tabela de Interações CRM (Agente Mariana)
+model CRMInteraction {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  type        String   // email_sent, email_received, follow_up, call
+  subject     String?
+  content     String?
+  status      String   @default("cold") // cold, warm, hot, qualified
+  handledBy   String   // pedro, mariana, claudia
+  emailFrom   String?
+  emailTo     String?
+  emailCc     String?
+  attachment  String?
+  nextFollowUp DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Tabela de Emails Enviados
+model EmailLog {
+  id           String   @id @default(cuid())
+  from         String
+  to           String
+  cc           String?
+  subject      String
+  body         String?
+  attachment   String?  // Nome do arquivo anexado
+  status       String   @default("pending") // pending, sent, failed
+  agent        String   // pedro, mariana, claudia
+  errorMessage String?
+  createdAt    DateTime @default(now())
+}
+
+// Tabela de Alertas WhatsApp
+model WhatsAppAlert {
+  id           String   @id @default(cuid())
+  to           String
+  message      String
+  type         String   // weekly_report, urgent, immediate, daily
+  status       String   @default("pending") // pending, sent, failed
+  errorMessage String?
+  createdAt    DateTime @default(now())
+}
+
+// Tabela de Relatórios Diários
+model DailyReport {
+  id               String   @id @default(cuid())
+  date             DateTime @unique
+  vesselsTracked   Int      @default(0)
+  newContacts      Int      @default(0)
+  reengagements    Int      @default(0)
+  leadsTransferred Int      @default(0)
+  quotationsSent   Int      @default(0)
+  estimatedValue   Float    @default(0)
+  alerts           String?  // JSON de alertas
+  summary          String?
+  createdAt        DateTime @default(now())
+}
+
+// Tabela de Agendamentos (Agente Claudia)
+model Meeting {
+  id          String   @id @default(cuid())
+  clientId    String?
+  client      Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  title       String
+  description String?
+  date        DateTime
+  duration    Int?     // em minutos
+  status      String   @default("scheduled") // scheduled, completed, cancelled
+  location    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Tabela de Configurações do Sistema
+model SystemConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+// Tabela de Usuários do Sistema (Gestores)
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("manager") // admin, manager, viewer
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Tabela de Atividades/Logs do Sistema
+model ActivityLog {
+  id         String   @id @default(cuid())
+  agent      String   // pedro, mariana, claudia, system
+  action     String   // track_vessels, send_email, qualify_lead, etc
+  entityType String?  // vessel, client, email, report
+  entityId   String?
+  details    String?
+  status     String   @default("success") // success, error, pending
+  createdAt  DateTime @default(now())
+}

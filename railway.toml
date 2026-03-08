@@ -1,0 +1,17 @@
+# MTS Angola Multi-Agent System - Railway Configuration
+# https://railway.app
+
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "npx prisma migrate deploy && node .next/standalone/server.js"
+healthcheckPath = "/"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+# Environment variables needed:
+# DATABASE_URL=file:/app/data/mts_angola.db
+# SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
+# TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER (optional)

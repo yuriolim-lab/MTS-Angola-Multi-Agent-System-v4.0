@@ -1,0 +1,21 @@
+# Nixpacks configuration for Railway deployment
+# MTS Angola Multi-Agent System
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "bun"]
+aptPkgs = ["openssl"]
+
+[phases.install]
+cmds = ["bun install --frozen-lockfile"]
+
+[phases.build]
+cmds = [
+  "bun run db:generate",
+  "bun run build"
+]
+
+[phases.prerelease]
+cmds = ["mkdir -p /app/data"]
+
+[start]
+cmd = "node .next/standalone/server.js"
