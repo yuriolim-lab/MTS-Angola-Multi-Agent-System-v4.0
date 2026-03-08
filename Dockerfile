@@ -1,59 +1,33 @@
-# MTS Angola Multi-Agent System - Dockerfile for Railway
-# Simple and reliable production build
+# MTS Angola Multi-Agent System - Simple Dockerfile for Railway
+# Uses Bun for everything (install, build, runtime)
 
-FROM node:20-alpine AS base
-
-# Install dependencies only when needed
-FROM base AS deps
-RUN apk add --no-cache libc6-compat openssl
+FROM oven/bun:1-alpine AS base
 WORKDIR /app
 
-# Install dependencies
-COPY package.json package-lock.json* ./
-COPY prisma ./prisma/
-RUN npm ci && npx prisma generate
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl nodejs
 
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-RUN apk add --no-cache openssl
-
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/prisma ./prisma
+# Copy all files
 COPY . .
 
-# Disable telemetry and validate env
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV SKIP_ENV_VALIDATION=1
+# Install dependencies and generate Prisma
+RUN bun install
+RUN bunx prisma generate
 
 # Build
-RUN npm run build
-
-# Production image, copy all the files and run
-FROM base AS runner
-WORKDIR /app
-RUN apk add --no-cache openssl
-
-ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV SKIP_ENV_VALIDATION=1
+RUN bun run build
+
+# Create data directory
+RUN mkdir -p /app/data
+
+# Environment
+ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Create data directory for SQLite
-RUN mkdir -p /app/data
-
-# Copy standalone server
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/prisma ./prisma
-
-# Ensure Prisma client is available
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-
 EXPOSE 3000
 
-# Run migrations and start server
-CMD ["sh", "-c", "npx prisma migrate deploy || npx prisma db push && node server.js"]
+# Start with database setup
+CMD ["sh", "-c", "bunx prisma migrate deploy || bunx prisma db push && node .next/standalone/server.js"]
