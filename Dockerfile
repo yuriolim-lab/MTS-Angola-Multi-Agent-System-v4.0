@@ -64,6 +64,10 @@ RUN adduser --system --uid 1001 nextjs
 # Create data directory for SQLite
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
 
+# Copy startup script first
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh && chown nextjs:nodejs /app/start.sh
+
 # Copy built application
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
@@ -85,5 +89,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
-# Start command with database migration
-CMD ["sh", "-c", "npx prisma migrate deploy || npx prisma db push --accept-data-loss && node server.js"]
+# Start using the script
+CMD ["/app/start.sh"]

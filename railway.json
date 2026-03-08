@@ -4,17 +4,10 @@
     "builder": "dockerfile"
   },
   "deploy": {
+    "startCommand": "/app/start.sh",
     "healthcheckPath": "/",
     "healthcheckTimeout": 120,
     "restartPolicyType": "on_failure",
-    "restartPolicyMaxRetries": 3,
-    "numReplicas": 1
-  },
-  "volumes": [
-    {
-      "name": "mts-data",
-      "mountPath": "/app/data",
-      "sizeMB": 480
-    }
-  ]
+    "restartPolicyMaxRetries": 3
+  }
 }
