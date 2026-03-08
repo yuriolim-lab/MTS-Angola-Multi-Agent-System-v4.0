@@ -1,56 +1,53 @@
 # Dependencies
 node_modules
-.pnpm-store
 
 # Build outputs
 .next
 out
 build
 
-# Development files
+# Development
 .git
 .gitignore
 *.md
-.env*.local
-.env
+.env*
+!.env.example
 
-# Database files (will be created in production)
+# Database
 db/
 *.db
 *.db-journal
 
-# Upload folder
+# Upload
 upload/
 
-# IDE and editor files
+# IDE
 .idea
 .vscode
-*.swp
-*.swo
 
-# OS files
+# OS
 .DS_Store
-Thumbs.db
-
-# Test and coverage
-coverage
-.nyc_output
 
 # Logs
 *.log
-npm-debug.log*
 
-# Temporary files
+# Temp
+.cache
 tmp
 temp
-.cache
 
-# Skills directory
-skills/
-
-# Claude and AI config
+# AI config
 .claude
 .z-ai-config
 
 # Examples
 examples/
+
+# Scripts
+*.sh
+
+# Skills
+skills/
+
+# Download
+download/
