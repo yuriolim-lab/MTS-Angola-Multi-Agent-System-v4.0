@@ -47,82 +47,69 @@ Sistema de 3 agentes autônomos especializados:
 │   └── lib/
 │       ├── services/          # Serviços (email, WhatsApp, etc)
 │       └── utils/             # Utilitários
-├── .env.example               # Variáveis de ambiente
 ├── Dockerfile                 # Docker para Railway
 ├── railway.json               # Configuração Railway
-└── railway.toml               # Configuração Railway
+├── start.sh                   # Script de inicialização
+└── .env.example               # Variáveis de ambiente
 ```
 
-## 🚀 Deploy no Railway (Gratuito)
+## 🚀 Deploy no Railway
 
 ### Passo 1: Preparar o Repositório GitHub
 
 ```bash
-# Inicializar git (se ainda não existir)
+# Inicializar git
 git init
 
 # Adicionar todos os arquivos
 git add .
 
-# Commit inicial
+# Commit
 git commit -m "MTS Angola Multi-Agent System v4.0"
 
-# Adicionar remote do GitHub
+# Adicionar remote
 git remote add origin https://github.com/SEU_USUARIO/mts-angola.git
 
-# Push para GitHub
+# Push
 git push -u origin main
 ```
 
-### Passo 2: Criar Conta no Railway
+### Passo 2: Criar Projeto no Railway
 
 1. Acesse [railway.app](https://railway.app)
-2. Clique em **"Start a New Project"**
+2. Clique em **"New Project"**
 3. Selecione **"Deploy from GitHub repo"**
-4. Autorize o Railway a acessar seus repositórios
-5. Selecione o repositório `mts-angola`
+4. Escolha o repositório `mts-angola`
 
 ### Passo 3: Configurar Variáveis de Ambiente
 
 No Railway, vá em **Variables** e adicione:
 
 ```env
-# Database
 DATABASE_URL=file:/app/data/mts_angola.db
 
-# Email SMTP (obrigatório)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
 SMTP_USER=seu-email@gmail.com
 SMTP_PASS=sua-senha-de-app
 
-# Company
 COMPANY_NAME=MTS Angola
 COMPANY_EMAIL=info@mtsangola.com
-
-# Agents
-AGENT_PEDRO_EMAIL=pedro@mtsangola.com
-AGENT_MARIANA_EMAIL=mariana@mtsangola.com
-AGENT_CLAUDIA_EMAIL=claudia@mtsangola.com
-
-# Notifications
-NOTIFICATION_EMAIL=manager@mtsangola.com
 ```
 
 ### Passo 4: Adicionar Volume Persistente
 
-1. No Railway, vá em **Settings** → **Volumes**
+1. Vá em **Settings** → **Volumes**
 2. Clique em **"Add Volume"**
 3. Configure:
    - **Mount Path**: `/app/data`
-   - **Size**: 1GB (suficiente para SQLite)
-4. Isso garante que o banco de dados persista entre deploys
+   - **Size**: 1GB
 
 ### Passo 5: Deploy
 
 1. Clique em **"Deploy"**
-2. Aguarde o build completar (~3-5 minutos)
+2. Aguarde o build (~3-5 minutos)
 3. Acesse sua aplicação em `https://seu-projeto.up.railway.app`
 
 ## 🔧 Configuração de Email (Gmail)
@@ -136,14 +123,11 @@ NOTIFICATION_EMAIL=manager@mtsangola.com
 
 Para alertas críticos via WhatsApp:
 
-1. Crie conta em [twilio.com](https://twilio.com)
-2. Ative o sandbox de WhatsApp
-3. Adicione as variáveis:
-
 ```env
-TWILIO_ACCOUNT_SID=seu-account-sid
-TWILIO_AUTH_TOKEN=seu-auth-token
-TWILIO_PHONE_NUMBER=whatsapp:+14155238886
+TWILIO_SID=seu-account-sid
+TWILIO_TOKEN=seu-auth-token
+TWILIO_PHONE=+14155238886
+MANAGER_PHONE=+244923456789
 ```
 
 ## 🏃 Desenvolvimento Local
@@ -154,7 +138,6 @@ bun install
 
 # Configurar ambiente
 cp .env.example .env
-# Edite .env com suas configurações
 
 # Criar banco de dados
 bun run db:push
@@ -177,33 +160,16 @@ Acesse [http://localhost:3000](http://localhost:3000)
 | `/api/documents/send` | POST | Enviar documento por email |
 | `/api/dashboard` | GET | Dados do dashboard |
 
-## 🔄 Agentes Autônomos
-
-### Pedro - Inteligência de Mercado
-- Rastreia navios nos portos de Angola
-- Identifica oportunidades de negócio
-- Gera relatórios diários automáticos
-
-### Mariana - CRM & Marketing
-- Gere contactos e leads
-- Envia emails de follow-up
-- Distribui Portfolio MTS
-
-### Claudia - Comercial & Financeiro
-- Qualifica leads quentes
-- Envia cotações de serviços
-- Agenda reuniões
-
 ## 💰 Custos
 
 | Serviço | Custo |
 |---------|-------|
-| Railway (hobby plan) | **Gratuito** |
-| Domínio .railway.app | **Grátis** |
-| Email SMTP (Gmail) | **Grátis** |
-| WhatsApp (Twilio) | Pay-as-you-go |
+| Railway (hobby) | **GRÁTIS** |
+| Domínio .railway.app | **GRÁTIS** |
+| Email SMTP (Gmail) | **GRÁTIS** |
+| WhatsApp (Twilio) | Opcional |
 
-**Total mensal: $0** (com plano gratuito Railway)
+**Total mensal: $0**
 
 ## 📞 Suporte
 

@@ -2,20 +2,17 @@
 # MTS Angola Multi-Agent System
 
 [phases.setup]
-nixPkgs = ["nodejs_20", "bun"]
+nixPkgs = ["nodejs_20", "openssl"]
 aptPkgs = ["openssl"]
 
 [phases.install]
-cmds = ["bun install --frozen-lockfile"]
+cmds = ["npm ci --include=dev"]
 
 [phases.build]
 cmds = [
-  "bun run db:generate",
-  "bun run build"
+  "npx prisma generate",
+  "npm run build"
 ]
 
-[phases.prerelease]
-cmds = ["mkdir -p /app/data"]
-
 [start]
-cmd = "node .next/standalone/server.js"
+cmd = "node server.js"

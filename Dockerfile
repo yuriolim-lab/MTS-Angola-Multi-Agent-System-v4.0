@@ -1,70 +1,59 @@
 # MTS Angola Multi-Agent System - Dockerfile for Railway
-FROM oven/bun:1 AS base
+# Simple and reliable production build
 
-# Install dependencies
+FROM node:20-alpine AS base
+
+# Install dependencies only when needed
 FROM base AS deps
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
-# Copy package files
-COPY package.json bun.lock* ./
-COPY prisma ./prisma/
-
 # Install dependencies
-RUN bun install --frozen-lockfile
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma/
+RUN npm ci && npx prisma generate
 
-# Generate Prisma Client
-RUN bun run db:generate
-
-# Build stage
+# Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
+RUN apk add --no-cache openssl
 
-# Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/prisma ./prisma
 COPY . .
 
-# Set environment variable for build
+# Disable telemetry and validate env
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
+ENV SKIP_ENV_VALIDATION=1
 
-# Build the application
-RUN bun run build
+# Build
+RUN npm run build
 
-# Production stage
+# Production image, copy all the files and run
 FROM base AS runner
 WORKDIR /app
+RUN apk add --no-cache openssl
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 # Create data directory for SQLite
 RUN mkdir -p /app/data
 
-# Create non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-# Copy built files
-COPY --from=builder /app/public ./public
+# Copy standalone server
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
+
+# Ensure Prisma client is available
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-
-# Copy documents
-COPY --from=builder /app/public/documents ./public/documents
-
-# Set ownership
-RUN chown -R nextjs:nodejs /app
-
-USER nextjs
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 
 EXPOSE 3000
 
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-
-# Start command with Prisma migration
-CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+# Run migrations and start server
+CMD ["sh", "-c", "npx prisma migrate deploy || npx prisma db push && node server.js"]
